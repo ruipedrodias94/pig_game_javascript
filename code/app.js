@@ -9,11 +9,21 @@ GAME RULES:
 
 */
 
+/*
+YOUR 3 CHALLENGES
+Change the game to follow these rules:
+
+1. A player looses his ENTIRE score when he rolls two 6 in a row. After that, it's the next player's turn. (Hint: Always save the previous dice roll in a separate variable)
+2. Add an input field to the HTML where players can set the winning score, so that they can change the predefined score of 100. (Hint: you can read that value with the .value property in JavaScript. This is a good oportunity to use google to figure this out :)
+3. Add another dice to the game, so that there are two dices now. The player looses his current score when one of them is a 1. (Hint: you will need CSS to position the second dice, so take a look at the CSS code for the first one.)
+*/
+
+
 /**
  * Variable declarations
  */
 
-var scores, roundScore, idActivePlayer, diceScore;
+var scores, roundScore, idActivePlayer, lastDiceScore, limit;
 
 // Add state variable
 var gameState;
@@ -30,21 +40,31 @@ document.querySelector('.btn-roll').addEventListener('click', function () {
         // 1. Random number
         var dice = Math.floor(Math.random() * 6) + 1;
 
+        console.log('Player ID:: ' + idActivePlayer + ' Dice:: ' + dice + ' LastDice:: ' + lastDiceScore);
+
         //2. Display the result
         var diceDOM = document.querySelector('.dice');
         diceDOM.style.display = 'block';
         diceDOM.src = '/images/dice-' + dice + '.png';
 
-
         //3. Update the round score IF the rolled number was NOT a 1
         if (dice !== 1) {
-            //Add score
-            roundScore += dice;
-            document.querySelector('#current-' + idActivePlayer).textContent = roundScore;
+            // If score two times value six, lost all score
+            if (dice === 6 && lastDiceScore === 6) {
+                scores[idActivePlayer] = 0;
+                document.querySelector('#score-' + idActivePlayer).textContent = scores[idActivePlayer];
+                nextPlayerPlay();
+            } else {
+                //Add score
+                roundScore += dice;
+                document.querySelector('#current-' + idActivePlayer).textContent = roundScore;
+            }
         } else {
             //Next player
             nextPlayerPlay();
         }
+        lastDiceScore = dice;
+
     }
 });
 
@@ -57,21 +77,26 @@ document.querySelector('.btn-hold').addEventListener('click', function () {
         // Update UI
 
         document.querySelector('#score-' + idActivePlayer).textContent = scores[idActivePlayer];
-        // Check if the player won the game
-        if (checkWinner(idActivePlayer)) {
-            document.querySelector('#name-' + idActivePlayer).textContent = "Winner!";
-            // Hide the dice
-            document.querySelector('.dice').style.display = 'none';
 
-            // Add the class winner
-            document.querySelector('.player-' + idActivePlayer + '-panel').classList.add('winner');
-            // Remove the class active
-            document.querySelector('.player-' + idActivePlayer + '-panel').classList.remove('active');
+        limit = document.querySelector('.final-score').value;
 
-            gameState = false;
+        if (limit) {
+            // Check if the player won the game
+            if (checkWinner(idActivePlayer, limit)) {
+                document.querySelector('#name-' + idActivePlayer).textContent = "Winner!";
+                // Hide the dice
+                document.querySelector('.dice').style.display = 'none';
 
-        } else {
-            nextPlayerPlay();
+                // Add the class winner
+                document.querySelector('.player-' + idActivePlayer + '-panel').classList.add('winner');
+                // Remove the class active
+                document.querySelector('.player-' + idActivePlayer + '-panel').classList.remove('active');
+
+                gameState = false;
+
+            } else {
+                nextPlayerPlay();
+            }
         }
     }
 });
@@ -102,8 +127,8 @@ function nextPlayerPlay() {
  * Function that checks if a player has won the game
  * @param {int} idActivePlayer 
  */
-function checkWinner(idActivePlayer) {
-    return scores[idActivePlayer] >= 20 ? true : false;
+function checkWinner(idActivePlayer, limitScore) {
+    return scores[idActivePlayer] >= limitScore ? true : false;
 }
 
 /**
@@ -126,6 +151,8 @@ function initGame() {
     roundScore = 0;
     idActivePlayer = 0;
     gameState = true;
+
+
     // Put all the scores at zero
     document.getElementById('score-0').textContent = 0;
     document.getElementById('score-1').textContent = 0;
